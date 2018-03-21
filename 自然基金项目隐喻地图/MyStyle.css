@@ -1,0 +1,230 @@
+html{
+    height:100%;
+    margin: 0;
+}
+*{
+    margin:0;
+    padding:0;
+}
+
+.full{
+    position:absolute;
+    width: 100%;
+    height:100%;
+}
+div#main_title{
+    height:60px;
+    background-color: black;
+    /*设置字体属性*/
+    font-family: 微软雅黑;
+    font-size: 1.5em;
+    color:#FFF;
+    text-align: center;
+    letter-spacing:15px;
+    line-height: 60px;
+}
+
+
+/*地图容器*/
+#map_div {
+    left: 25%;
+    right:10%;
+    width:65%;
+    position: relative;
+    -moz-box-flex: 1;
+    -webkit-box-flex:1;
+    box-flex: 1;
+    background-color:#96365D;
+    /*mediumvioletred*/
+}
+
+/*绘制地图的svg*/
+svg#svg_area{
+    position:absolute;
+    background-color: rgba(255,255,255,0);
+}
+
+div#control{
+    /*padding: 30px 8px;*/
+    z-index: 2;
+    position: absolute;
+    right:0;
+    top: 60px;
+    background-color:#528B8B;
+    width:10%;
+    height:100%
+}
+
+/*显示当前缩放倍数以及多边形信息*/
+div#show_detail{
+    position: absolute;
+    float:left;
+    top: 60px;
+    background-color:rgba(180,20,20,0.6);
+    width:25%;
+    height:100%
+}
+p#detail{
+    margin: 5px 20px 0px 20px;
+}
+p#show_scale{
+    margin: 5px 20px 0px 20px;
+}
+
+
+button {
+    margin: 10px 30px 10px 30px;
+    width: 60px;
+    height: 25px;
+    font-size: 20px;
+    color: #d9eef7;
+    border: solid 1px #0076a3;
+    background: #0095cd;
+    background: -webkit-gradient(linear, left top, left bottom, from(#00adee), to(#0078a5));
+    background: -moz-linear-gradient(top,  #00adee,  #0078a5);
+    filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#00adee', endColorstr='#0078a5');
+    text-shadow: 0 1px 1px rgba(0,0,0,.3);
+    -webkit-border-radius: .5em;
+    -moz-border-radius: .5em;
+    border-radius: .5em;
+    -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.2);
+    -moz-box-shadow: 0 1px 2px rgba(0,0,0,.2);
+    box-shadow: 0 1px 2px rgba(0,0,0,.2);
+}
+button:hover {
+    width: 60px;
+    height: 25px;
+    font-size: 20px;
+    background: #007ead;
+    background: -webkit-gradient(linear, left top, left bottom, from(#0095cc), to(#00678e));
+    background: -moz-linear-gradient(top,  #0095cc,  #00678e);
+    filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#0095cc', endColorstr='#00678e');
+}
+button:active {
+    width: 60px;
+    height: 25px;
+    font-size: 20px;
+    color: #80bed6;
+    background: -webkit-gradient(linear, left top, left bottom, from(#0078a5), to(#00adee));
+    background: -moz-linear-gradient(top,  #0078a5,  #00adee);
+    filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#0078a5', endColorstr='#00adee');
+}
+
+
+/*设置文字*/
+text {
+    font: 10px Microsoft YaHei;
+    pointer-events: none;
+    text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+}
+
+
+/*背景矩形*/
+.background {
+    fill:rgba(50,50,50,0.6);
+    pointer-events: all;
+}
+
+/*多边形内部边界*/
+.polygon-borders {
+    fill: none;
+    stroke: #777;
+    stroke-width: 1.5px;
+    stroke-dasharray: 2,2; /*线型*/
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    pointer-events: none;
+}
+
+/*外部轮廓边界*/
+.out_line {
+    fill: none;
+    stroke:rgba(0,0,250,0.8);
+    stroke-width: 2px;
+    stroke-dasharray:none; /*线型*/
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    pointer-events: none;
+}
+
+
+/* 水平布局 */
+.box-horizon {
+    position: relative;
+    display: -moz-box;
+    display: -webkit-box;
+    -moz-box-orient: horizontal;
+    -webkit-box-orient: horizontal;
+}
+
+
+/* 垂直布局 */
+.box-vertical {
+    position: relative;
+    display: -moz-box;
+    display: -webkit-box;
+    -moz-box-orient: vertical;
+    -webkit-box-orient: vertical;
+}
+
+/*test*/
+/*鼠标点击时,其所在的多边形为激活状态，作用在鼠标悬浮层上*/
+#level2.active{
+    fill: #EE0000;
+    stroke: #f00;
+    stroke-width: 1.5px;
+}
+#level3.active{
+    fill:#EE0000;
+    stroke: #f00;
+    stroke-width: 1.5px;
+}
+
+/*鼠标悬浮*/
+.subjects path {
+    stroke: rgb(80, 64, 39);
+    stroke-linejoin: round;
+    stroke-width:.6;
+    fill: rgb(117, 87, 57);
+    opacity: .3;   /* 不透明度*/
+}
+
+.subjects path:hover {
+    fill-opacity:.1;
+    stroke-width:1.1;
+    opacity: 1;
+}
+
+
+.subunit.firstLevel{
+    fill:gold;
+}
+.subunit.信息科学部{
+    fill:#FFB90F;
+}
+.subunit.工程与材料科学部{
+    fill:#EEEE00;
+}
+.subunit.数理科学部{
+    fill:#EEAEEE;
+}
+.subunit.地球科学部{
+    fill:#CDB38B;
+}
+.subunit.化学科学部{
+    fill:#FF8C69;
+}
+.subunit.生命科学部{
+    fill:#7CCD7C;
+}
+.subunit.医学科学部{
+    fill:#87CEFF;
+}
+.subunit.管理科学部{
+    fill:#8968CD;
+}
+
+.the_last_2_layers{
+    fill:#aabbcc;
+}
+

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>自然基金项目隐喻地图</title>
+
+</head>
+
+<body class="full" style="display: -moz-box; display: -webkit-box " >
+<div class="box-vertical full">
+    <div id="main_title">自然科学基金项目隐喻地图-2</div>
+    <!--地图显示区域-->
+    <div id="map_div">
+           <svg id="svg_area"></svg>
+    </div>
+
+    <div id="control">
+        <br/>
+    <button id="zoom_in" class="zoom_bt">+</button>
+
+    <button id="zoom_out" class="zoom_bt">-</button>
+
+    <button id="reset">reset</button>
+        <br/> <br/>
+    </div>
+
+    <div id="show_detail">
+        <p id="show_scale"><b>current scale:</b> 1</p>
+        <br/>
+        <p id="detail"><b>detail:</b>2016年度国家自然基金资助项目统计详情 </p>
+    </div>
+
+</div>
+
+
+<link href="MyStyle.css" rel="stylesheet" type="text/css"/>
+<script src="lib/D3_v3.js"></script>
+<script src="lib/jquery-2.1.4.js"></script>
+<script src="https://cdn.bootcss.com/topojson/1.6.20/topojson.js"></script>
+<script src="makeMap.js"></script>
+<script src="handleData.js"></script>
+</body>
+</html>
