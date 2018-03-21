@@ -1,3 +1,7 @@
+//last edited by GaoZhen at 2018/3/21 
+//all copy right hold by GaoZhen.
+//free to use for only study and research purpose,please contact 1295020109@qq.com for permission on commercial usage.
+
 // TODO list
 // 1.地图初始出现在svg中心位置,需要依据地图坐标中心设置投影中心 project.center()  //done
 // 2.依缩放比例(zoom.scale)显示不同细节层次,每次只显示一层  //done
