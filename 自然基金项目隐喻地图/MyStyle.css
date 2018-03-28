@@ -28,20 +28,19 @@ div#main_title{
 /*地图容器*/
 #map_div {
     left: 25%;
-    right:10%;
     width:65%;
     position: relative;
     -moz-box-flex: 1;
     -webkit-box-flex:1;
     box-flex: 1;
     background-color:#96365D;
-    /*mediumvioletred*/
 }
 
 /*绘制地图的svg*/
 svg#svg_area{
     position:absolute;
     background-color: rgba(255,255,255,0);
+    /*overflow: auto;*/
 }
 
 div#control{
@@ -74,7 +73,7 @@ p#show_scale{
 
 button {
     margin: 10px 30px 10px 30px;
-    width: 60px;
+    width: 75px;
     height: 25px;
     font-size: 20px;
     color: #d9eef7;
@@ -92,7 +91,7 @@ button {
     box-shadow: 0 1px 2px rgba(0,0,0,.2);
 }
 button:hover {
-    width: 60px;
+    width: 75px;
     height: 25px;
     font-size: 20px;
     background: #007ead;
@@ -125,12 +124,12 @@ text {
     pointer-events: all;
 }
 
-/*多边形内部边界*/
+/*各个多边形内部边界,不包括整体的外部轮廓*/
 .polygon-borders {
     fill: none;
-    stroke: #777;
-    stroke-width: 1.5px;
-    stroke-dasharray: 2,2; /*线型*/
+    stroke: #999;
+    /*stroke-width: 1px;*/    /*不要在CSS中设置线宽，否则会以此数值缩放。（在zoomed和interpolateZoom函数中 1.5 / d3.event.scale会控制线宽恒为1.5px） */
+    /*stroke-dasharray: 2,2; !*线型*!*/
     stroke-linejoin: round;
     stroke-linecap: round;
     pointer-events: none;
@@ -140,7 +139,7 @@ text {
 .out_line {
     fill: none;
     stroke:rgba(0,0,250,0.8);
-    stroke-width: 2px;
+    /*stroke-width: 1px;*/
     stroke-dasharray:none; /*线型*/
     stroke-linejoin: round;
     stroke-linecap: round;
@@ -167,64 +166,58 @@ text {
     -webkit-box-orient: vertical;
 }
 
-/*test*/
-/*鼠标点击时,其所在的多边形为激活状态，作用在鼠标悬浮层上*/
-#level2.active{
-    fill: #EE0000;
-    stroke: #f00;
-    stroke-width: 1.5px;
+.subunit.active{
+    /*stroke-width: 1px;*/
 }
-#level3.active{
-    fill:#EE0000;
-    stroke: #f00;
-    stroke-width: 1.5px;
-}
+
+
+
 
 /*鼠标悬浮*/
-.subjects path {
-    stroke: rgb(80, 64, 39);
-    stroke-linejoin: round;
-    stroke-width:.6;
-    fill: rgb(117, 87, 57);
-    opacity: .3;   /* 不透明度*/
-}
+/*.subjects path {*/
+    /*stroke: rgb(80, 64, 39);*/
+    /*stroke-linejoin: round;*/
+    /*stroke-width:.6;*/
+    /*fill: rgb(117, 87, 57);*/
+    /*opacity: .3;   !* 不透明度*!*/
+/*}*/
 
-.subjects path:hover {
-    fill-opacity:.1;
-    stroke-width:1.1;
-    opacity: 1;
-}
+/*.subjects path:hover {*/
+    /*fill-opacity:.1;*/
+    /*stroke-width:1.1;*/
+    /*opacity: 1;*/
+/*}*/
 
 
-.subunit.firstLevel{
-    fill:gold;
-}
-.subunit.信息科学部{
-    fill:#FFB90F;
-}
-.subunit.工程与材料科学部{
-    fill:#EEEE00;
-}
-.subunit.数理科学部{
-    fill:#EEAEEE;
-}
-.subunit.地球科学部{
-    fill:#CDB38B;
-}
-.subunit.化学科学部{
-    fill:#FF8C69;
-}
-.subunit.生命科学部{
-    fill:#7CCD7C;
-}
-.subunit.医学科学部{
-    fill:#87CEFF;
-}
-.subunit.管理科学部{
-    fill:#8968CD;
-}
+/*.subunit .firstLevel{*/
+    /*fill:gold;*/
+/*}*/
+/*.subunit.信息科学部{*/
+    /*fill:#FFB90F;*/
+/*}*/
+/*.subunit.工程与材料科学部{*/
+    /*fill:#EEEE00;*/
+/*}*/
+/*.subunit.数理科学部{*/
+    /*fill:#EEAEEE;*/
+/*}*/
+/*.subunit.地球科学部{*/
+    /*fill:#CDB38B;*/
+/*}*/
+/*.subunit.化学科学部{*/
+    /*fill:#FF8C69;*/
+/*}*/
+/*.subunit.生命科学部{*/
+    /*fill:#7CCD7C;*/
+/*}*/
+/*.subunit.医学科学部{*/
+    /*fill:#87CEFF;*/
+/*}*/
+/*.subunit.管理科学部{*/
+    /*fill:#8968CD;*/
+/*}*/
 
-.the_last_2_layers{
-    fill:#aabbcc;
-}
+/*.the_last_2_layers{*/
+    /*fill:#aabbcc;*/
+/*}*/
 
