@@ -70,6 +70,28 @@ p#show_scale{
     margin: 5px 20px 0px 20px;
 }
 
+select{
+    border: solid 1px #000;
+    /*很关键：将默认的select选择框样式清除*/
+    appearance:none;
+    -moz-appearance:none;
+    -webkit-appearance:none;
+    /*在选择框的最右侧中间显示小箭头图片*/
+    color:wheat;
+    background: url("imag/arrow.png") no-repeat scroll right center transparent;
+    /*为下拉小箭头留出一点位置，避免被文字覆盖*/
+    padding-right: 14px;
+    width:auto;
+    height:25px;
+    margin: 10px 30px 10px 30px;
+}
+option{
+    text-align: center;
+    background-color: #0076a3 ;
+}
+
+/*清除ie的默认选择框样式清除，隐藏下拉箭头*/
+select::-ms-expand { display: none; }
 
 button {
     margin: 10px 30px 10px 30px;
@@ -146,7 +168,6 @@ text {
     pointer-events: none;
 }
 
-
 /* 水平布局 */
 .box-horizon {
     position: relative;
@@ -155,7 +176,6 @@ text {
     -moz-box-orient: horizontal;
     -webkit-box-orient: horizontal;
 }
-
 
 /* 垂直布局 */
 .box-vertical {
@@ -172,52 +192,4 @@ text {
 
 
 
-
-/*鼠标悬浮*/
-/*.subjects path {*/
-    /*stroke: rgb(80, 64, 39);*/
-    /*stroke-linejoin: round;*/
-    /*stroke-width:.6;*/
-    /*fill: rgb(117, 87, 57);*/
-    /*opacity: .3;   !* 不透明度*!*/
-/*}*/
-
-/*.subjects path:hover {*/
-    /*fill-opacity:.1;*/
-    /*stroke-width:1.1;*/
-    /*opacity: 1;*/
-/*}*/
-
-
-/*.subunit .firstLevel{*/
-    /*fill:gold;*/
-/*}*/
-/*.subunit.信息科学部{*/
-    /*fill:#FFB90F;*/
-/*}*/
-/*.subunit.工程与材料科学部{*/
-    /*fill:#EEEE00;*/
-/*}*/
-/*.subunit.数理科学部{*/
-    /*fill:#EEAEEE;*/
-/*}*/
-/*.subunit.地球科学部{*/
-    /*fill:#CDB38B;*/
-/*}*/
-/*.subunit.化学科学部{*/
-    /*fill:#FF8C69;*/
-/*}*/
-/*.subunit.生命科学部{*/
-    /*fill:#7CCD7C;*/
-/*}*/
-/*.subunit.医学科学部{*/
-    /*fill:#87CEFF;*/
-/*}*/
-/*.subunit.管理科学部{*/
-    /*fill:#8968CD;*/
-/*}*/
-
-/*.the_last_2_layers{*/
-    /*fill:#aabbcc;*/
-/*}*/
 
