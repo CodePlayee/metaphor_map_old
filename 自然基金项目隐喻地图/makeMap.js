@@ -1,20 +1,22 @@
-//last edited by GaoZhen at 2018/3/28 
+//last edited by GaoZhen at 2018/4/2 
 //all copy right hold by GaoZhen.
 //free to use for only study and research purpose,please contact 1295020109@qq.com for permission on commercial usage.
 
 // TODO list
 // 1.地图初始出现在svg中心位置,需要依据地图坐标中心设置投影中心 project.center()  //done
 // 2.依缩放比例(zoom.scale)显示不同细节层次,每次只显示一层  //done
-// 3.鼠标点击多边形，相应的区域边界颜色改变，标注也有相应变化
+// 3.鼠标点击多边形，相应的区域边界颜色改变，标注也有相应变化 //done
 // 4.在多边形上实现自适应标注
 
 //重新组织后的数据
+var whole=new Array();//总体（第一层）
 var departments=new Array();//学部
 var subjects=new Array();//学科
 var sub_disciplines=new Array();//子学科
 var programs=new Array();//（个人项目）
-var all_data=[];//存放所有图层的原始数据
-var groups=[];//存放所有图层
+var groups=[];//存放所有图层g1,g2,g3,g4,g5
+var hierarchy=[whole,departments,subjects,sub_disciplines,programs];//包含一个inUse属性，指示当前鼠标点击的多边形
+
 
 // 说明：我们使用D3虽然导入的是topojson文件，但D3通过将TopoJSON对象转换为GeoJSON再绘制地图，
 // 所以实质还是使用GeoJSON对象绘制地图
@@ -31,7 +33,7 @@ window.onload=function () {
         .scale(140000)//设置缩放量
         .translate([width / 2, height / 2]);　//设置平移量
 
-    var path = d3.geo.path()
+    var path = d3.geo.path()  //create a path generator
         .projection(projection);　//应用上面生成的投影，每一个坐标都会先调用此投影函数，然后才产生路径值
 
     //缩放(对象/函数)
@@ -45,10 +47,6 @@ window.onload=function () {
     var svg = d3.select("svg")
         .attr("width",map_div_width) //width
         .attr("height",map_div_height) //height
-        // .attr("transform", "translate("
-        //     +(map_div_width-width)/2+","
-        //     +(map_div_height-height)/2
-        //     +")")
         .on("click", stopped, true);
 
     svg.append("rect")
@@ -69,6 +67,8 @@ window.onload=function () {
     var g5 = g.append("g");//第五层
     g5.level=5;
     groups=[g1,g2,g3,g4,g5];
+
+    var detail_g=g.append("g")//点击某个多边形放大后，展示其内部细节的容器
 
     svg.call(zoom) // delete this line to disable free zooming
         .call(zoom.event);
@@ -95,7 +95,6 @@ window.onload=function () {
     //页面加载后执行到上行。。。。。。。。。。。。。。。。。。。。。。。。。。。。
 
 
-
     //缩放按钮 button
     d3.selectAll('.zoom_bt').on('click', zoomClick);
     //复位按钮
@@ -105,12 +104,21 @@ window.onload=function () {
     });
     //数据重组织后查看相关统计信息
     d3.select("#reorganize").on('click',function () {
-        //alert(g2.style("display"));
-        var min= processedShow([g1,g2,g3,g4,g5]);
+        var min= processedShow(groups,$("#selection").val());
         var msg=" ";
         min.forEach(function (d) { msg+=d+"</br>"; })
         document.getElementById("statistic").innerHTML=msg;
-    })
+    });
+    // 改变select的值时触发的事件
+    $("#selection").change(function(){
+        var selectedValue=$("#selection").val(); ////获取选中记录的value值
+        selectChangeHandler(selectedValue);
+
+        var min= processedShow(groups,$("#selection").val());
+        var msg=" ";
+        min.forEach(function (d) { msg+=d+"</br>"; })
+        document.getElementById("statistic").innerHTML=msg;
+    });
 
 
     //鼠标在多边形上的点击事件(mouseup)
@@ -118,13 +126,6 @@ window.onload=function () {
     function focus(d,current_this) {
         {
             zoom.LOD_valid=false;
-            var all_layers=[departments,subjects,sub_disciplines,programs];
-            var groups=[g1,g2,g3,g4,g5]
-            var which_layer=whichLayer(groups);
-            var current_layer=all_layers[which_layer-1]; //g1不算
-            groups=null;
-
-
             //d为鼠标点击所属的多边形对象，有geometry 和properties属性
             //显示多边形的详细信息
             var message="<b>detail:</b>"+"<br/>";
@@ -155,14 +156,30 @@ window.onload=function () {
                 dy = bounds[1][1] - bounds[0][1],
                 x = (bounds[0][0] + bounds[1][0]) / 2,
                 y = (bounds[0][1] + bounds[1][1]) / 2,
-                // scale = Math.max(1, Math.min(8, 0.9 / Math.max(dx / width, dy / height))),
-                scale = Math.max(1, Math.min(8, 0.9 / Math.max(dx / (width*0.7), dy / (height*0.7) ))),//乘以0.7是防止放大得过大
+                scale = Math.max(1, Math.min(16, 0.9 / Math.max(dx / width, dy / height))),
+                //scale = Math.max(1, Math.min(8, 0.9 / Math.max(dx / (width*0.7), dy / (height*0.7) ))),//乘以0.7是防止放大得过大
                 translate = [width / 2 - scale * x, height / 2 - scale * y];
+                window.translate=translate;
+
+            //放大后显示细节
+            //首先将上一步放大的内容清空
+             detail_g.remove();
+             detail_g=g.append("g");
+
+            var hitPolygon=getHitPolygon(current_this);
+            //var current_group=whichGroup(groups);
+            //获取select标签选中的值
+            var selection=d3.select("#selection")[0][0];
+            var selectValue=selection.options[selection.selectedIndex].value;
+            if(!selectValue){
+                alert("Please choose a property to display.");
+            }
+
+            displayDetail(selectValue,width,height,detail_g,hitPolygon);
 
             svg.transition()
                 .duration(750)  //750
                 .call(zoom.translate(translate).scale(scale).event);
-
         }
     }
 
@@ -245,11 +262,12 @@ window.onload=function () {
             var geoRoot = topojson.feature(root,root.objects.collection);//整个geoJson对象，数据在geoRoot.features
 
             //获取地图范围
-            var range=getRange(geoRoot.features);  //geoRoot.features
+            var range=getRangeByFeatures(geoRoot.features);  //geoRoot.features
             //设置地图中心位置（整个地图外接矩形中心（经纬度））
-            projection.center([(range.min_log+range.max_log)/2,(range.min_lat+range.max_lat)/2]);
+            var center=[(range.min_log+range.max_log)/2,(range.min_lat+range.max_lat)/2];
+            projection.center(center);
 
-            group.selectAll("path") //
+            group.selectAll("path") //不同的root,对应不同的d3.geo.path  (投影中心不同)
                 .data(geoRoot.features )//data对应数据集，复数
                 .enter()
                 .append("path")
@@ -270,12 +288,10 @@ window.onload=function () {
                         default:
                             currentClass="subunit "+"the_last_2_layers";
                     }
-
                     d.fillColor=polygonFillColor(currentClass);
                     d3.select(this).style("fill",d.fillColor);
 
-                   // all_data.push(d);
-                     reorganize(d);//对原数据进行重组织。
+                    reorganize(d,center);//对原数据进行重组织。
                     return currentClass;
                 })
                 .on("mouseover",function () {
@@ -365,22 +381,31 @@ function LOD(scale,valid)
 }
 
 //鼠标点击已激活多边形区域或者背景矩形区域，恢复到初始状态
-    function reset()
-    {
+function reset()
+{
+        detail_g.remove();
+        detail_g=g.append("g");
+
         if(active.node()!=null){
             active.style("fill",active.node().__data__.fillColor);
             active.classed("active", false);
         }
 
         active = d3.select(null);
+
         svg.transition()
             .duration(750)
-            .call(zoom.translate([0, 0]).scale(1).event);
+           .call(zoom.translate([0, 0]).scale(1).event);
 
-        document.getElementById("detail").innerHTML="<b>detail:</b> "+"<br/>"+ "2016年度国家自然基金资助项目统计详情";
+    document.getElementById("detail").innerHTML="<b>detail:</b> "+"<br/>"+ "2016年度国家自然基金资助项目统计详情";
     }
 
-
+//select标签中的值改变触发的事件
+function selectChangeHandler(selectedValue) {
+    detail_g.remove();
+    detail_g=g.append("g");
+    displayDetail(selectedValue,width,height,detail_g,hierarchy.inUse);
+}
 
     //window.onload末尾
 }
