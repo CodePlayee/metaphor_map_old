@@ -1,11 +1,11 @@
 //last edited by GaoZhen at 2018/4/2 
 //all copyright hold by GaoZhen.
-//free to use for only study and research purpose,please contact 1295020109@qq.com for permission on commercial usage.
+//free to use only for study and research purpose,please contact 1295020109@qq.com for permission on other usage.
 
 // TODO list
 // 1.地图初始出现在svg中心位置,需要依据地图坐标中心设置投影中心 project.center()  //done
 // 2.依缩放比例(zoom.scale)显示不同细节层次,每次只显示一层  //done
-// 3.鼠标点击多边形，相应的区域边界颜色改变，标注也有相应变化 //done
+// 3.鼠标点击多边形，相应的区域边界颜色改变，标注也有相应变化//done
 // 4.在多边形上实现自适应标注
 
 //重新组织后的数据
@@ -57,7 +57,7 @@ window.onload=function () {
 
     var g = svg.append("g")
     var g1 = g.append("g");//第一层
-    g1.level=1;
+    g1.level=1, g1.id="g1";
     var g2 = g.append("g");//第二层
     g2.level=2;
     var g3 = g.append("g");//第三层
@@ -65,7 +65,7 @@ window.onload=function () {
     var g4 = g.append("g");//第四层
     g4.level=4;
     var g5 = g.append("g");//第五层
-    g5.level=5;
+    g5.level=5, g5.id="g5";
     groups=[g1,g2,g3,g4,g5];
 
     var detail_g=g.append("g")//点击某个多边形放大后，展示其内部细节的容器
@@ -123,8 +123,12 @@ window.onload=function () {
 
     //鼠标在多边形上的点击事件(mouseup)
     //d和d3中的data有关，而this是按下鼠标时光标所在的dom元素
-    function focus(d,current_this) {
+    function focus(d,projection,current_this) {
         {
+            //先将当前图层所有区域变暗
+            var current_group=whichGroup(groups);
+            current_group.style("opacity","0.7");
+
             zoom.LOD_valid=false;
             //d为鼠标点击所属的多边形对象，有geometry 和properties属性
             //显示多边形的详细信息
@@ -151,8 +155,14 @@ window.onload=function () {
             active.style("fill","#ff4433"); //鼠标点击区域变色
 
             //放大与对焦
-            var bounds = path.bounds(d),
-                dx = bounds[1][0] - bounds[0][0],
+            var bounds=undefined;
+            if(parseInt(d.properties.depth)>4){
+                bounds=getRangeByCoordinates(d.geometry.coordinates[0],projection);
+            }
+            else{
+                bounds=path.bounds(d);
+            }
+             var   dx = bounds[1][0] - bounds[0][0],
                 dy = bounds[1][1] - bounds[0][1],
                 x = (bounds[0][0] + bounds[1][0]) / 2,
                 y = (bounds[0][1] + bounds[1][1]) / 2,
@@ -161,8 +171,7 @@ window.onload=function () {
                 translate = [width / 2 - scale * x, height / 2 - scale * y];
                 window.translate=translate;
 
-            //放大后显示细节
-            //首先将上一步放大的内容清空
+            //放大后显示细节,首先将上一步放大的内容清空
              detail_g.remove();
              detail_g=g.append("g");
 
@@ -175,7 +184,7 @@ window.onload=function () {
                 alert("Please choose a property to display.");
             }
 
-            displayDetail(selectValue,width,height,detail_g,hitPolygon);
+            displayDetail(selectValue,detail_g,hitPolygon);
 
             svg.transition()
                 .duration(750)  //750
@@ -267,6 +276,9 @@ window.onload=function () {
             var center=[(range.min_log+range.max_log)/2,(range.min_lat+range.max_lat)/2];
             projection.center(center);
 
+            //保存当前的投影
+            group.projection=d3.geo.mercator().scale(140000).translate([width / 2, height / 2]).center(center);
+
             group.selectAll("path") //不同的root,对应不同的d3.geo.path  (投影中心不同)
                 .data(geoRoot.features )//data对应数据集，复数
                 .enter()
@@ -291,8 +303,10 @@ window.onload=function () {
                     d.fillColor=polygonFillColor(currentClass);
                     d3.select(this).style("fill",d.fillColor);
 
-                    reorganize(d,center);//对原数据进行重组织。
                     return currentClass;
+                })
+                .each(function (d) {
+                    reorganize(d,group.projection);//对原数据进行重组织。center
                 })
                 .on("mouseover",function () {
                     d3.select(this).style("opacity","0.7");
@@ -303,17 +317,16 @@ window.onload=function () {
                     d3.select(this).style("stroke","#777");
                 })
                 .on("mouseup", function (d) {  //click
-                    focus(d,this);//d和d3中的data有关，而this是按下鼠标时其所在的dom元素
+                    focus(d,group.projection,this);//d和d3中的data有关，而this是按下鼠标时其所在的dom元素
                 })
                 .append("title")  // 添加tooltip（即鼠标悬浮停留一会，就会显示相关信息）
                 .text(function(d){return d.properties.name});
 
 
             //各个多边形内部边界,不包括整体的外部轮廓
-            //datum 单数
             // by filtering on a === b or a !== b, we obtain exterior or interior boundaries exclusively.
             group.append("path")
-                .datum(topojson.mesh(root,  root.objects.collection, function(a, b) { return a !== b; }))
+                .datum(topojson.mesh(root,  root.objects.collection, function(a, b) { return a !== b; }))   //datum 单数
                 .attr("class", "polygon-borders")
                 .attr("d", path);
 
@@ -325,18 +338,23 @@ window.onload=function () {
 
             //显示多边形内的标注
             showPolygonLabel(group,geoRoot.features,projection);
-           // group.style("display","none");//只绘制，不显示
-        }
+
+            //如果是最后一层，则按项目申请单位将正六边形聚类
+            if(i==4){
+                clusterByOrganization(projection,programs,g5);
+            }
+
+
     }
+}
 
 
 //根据缩放倍数显示不同细节图层
-function LOD(scale,valid)
-{
-    var layers=[g1,g2,g3,g3,g4,g5];
+    function LOD(scale,valid)
+    {
     var disappear=function () {
-        for(var i=0;i<layers.length;i++){
-            layers[i].style("display","none");
+        for(var i=0;i<groups.length;i++){
+            groups[i].style("display","none");
         }
     }
 
@@ -372,6 +390,20 @@ function LOD(scale,valid)
             disappear();
             g5.style("display","");
             current_level=5;
+
+            //test
+
+            // for(var i=0;i<g5[0][0].children.length;i++){
+            //     var child=g5[0][0].children[i];
+            //     if(child.__data__.properties){
+            //         var organization=child.__data__.properties.dxpjzzje;
+            //         if(organization==="武汉大学"){
+            //             child.style.fill="black";
+            //             child.__data__.fillColor="black";
+            //         }
+            //     }
+            // }
+
         }
 
     }
@@ -381,8 +413,11 @@ function LOD(scale,valid)
 }
 
 //鼠标点击已激活多边形区域或者背景矩形区域，恢复到初始状态
-function reset()
-{
+    function reset()
+    {
+        var current_group=whichGroup(groups);
+        current_group.style("opacity","1");  //将当前图层的透明度恢复
+
         detail_g.remove();
         detail_g=g.append("g");
 
@@ -401,10 +436,10 @@ function reset()
     }
 
 //select标签中的值改变触发的事件
-function selectChangeHandler(selectedValue) {
+    function selectChangeHandler(selectedValue) {
     detail_g.remove();
     detail_g=g.append("g");
-    displayDetail(selectedValue,width,height,detail_g,hierarchy.inUse);
+    displayDetail(selectedValue,detail_g,hierarchy.inUse);
 }
 
     //window.onload末尾
