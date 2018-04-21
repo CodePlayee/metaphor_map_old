@@ -1,5 +1,5 @@
 //last edited by GaoZhen at 2018/4/2 
-//all copy right hold by GaoZhen.
+//all copyright hold by GaoZhen.
 //free to use for only study and research purpose,please contact 1295020109@qq.com for permission on commercial usage.
 
 // TODO list
