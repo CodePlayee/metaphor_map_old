@@ -63,11 +63,18 @@ div#show_detail{
     width:25%;
     height:100%
 }
-p#detail{
-    margin: 5px 20px 0px 20px;
+
+p.detail{
+    margin: 15px 5px 15px 10px;
+    font-size: 120%;
+    color: yellow;/*字体颜色*/
 }
+
 p#show_scale{
-    margin: 5px 20px 0px 20px;
+    margin: 5px 10px 0px 20px;
+
+    font-size: 160%;
+    color: yellow;/*字体颜色*/
 }
 
 select{
@@ -149,7 +156,7 @@ text {
 /*各个多边形内部边界,不包括整体的外部轮廓*/
 .polygon-borders {
     fill: none;
-    stroke: #999;
+    stroke: #888;
     /*stroke-width: 1px;*/    /*不要在CSS中设置线宽，否则会以此数值缩放。（在zoomed和interpolateZoom函数中 1.5 / d3.event.scale会控制线宽恒为1.5px） */
     /*stroke-dasharray: 2,2; !*线型*!*/
     stroke-linejoin: round;
