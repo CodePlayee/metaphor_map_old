@@ -1,5 +1,7 @@
-//last edited by GaoZhen at 2018/4/2 
+//last edited by GaoZhen at 2018/5/4 
+
 //all copyright hold by GaoZhen.
+
 //free to use only for study and research purpose,please contact 1295020109@qq.com for permission on other usage.
 
 // TODO list
@@ -7,6 +9,8 @@
 // 2.依缩放比例(zoom.scale)显示不同细节层次,每次只显示一层  //done
 // 3.鼠标点击多边形，相应的区域边界颜色改变，标注也有相应变化//done
 // 4.在多边形上实现自适应标注
+// 5.第五层点击放大聚焦有问题，推测是聚类时交换正六边形单元所致//done
+
 
 //重新组织后的数据
 var whole=new Array();//总体（第一层）
@@ -102,43 +106,78 @@ window.onload=function () {
         reset();
         zoom.LOD_valid=true;
     });
+
+    //实时显示鼠标坐标
+    // document.getElementById("map_div").addEventListener("mousemove",function(e){  //document.addEventListener
+    //     var x=e.clientX;
+    //     var y=e.clientY;
+    //     document.getElementById("coordinate").innerHTML="X:"+x+", "+"Y:"+y;
+    // });
+
     //数据重组织后查看相关统计信息
-    d3.select("#reorganize").on('click',function () {
-        var min= processedShow(groups,$("#selection").val());
-        var msg=" ";
-        min.forEach(function (d) { msg+=d+"</br>"; })
-        document.getElementById("statistic").innerHTML=msg;
-    });
+    // d3.select("#reorganize").on('click',function () {
+    //     // var min= processedShow(groups,$("#selection").val());
+    //     // var msg=" ";
+    //     // min.forEach(function (d) { msg+=d+"</br>"; })
+    //     // document.getElementById("statistic").innerHTML=msg;
+    // });
     // 改变select的值时触发的事件
     $("#selection").change(function(){
         var selectedValue=$("#selection").val(); ////获取选中记录的value值
         selectChangeHandler(selectedValue);
 
-        var min= processedShow(groups,$("#selection").val());
-        var msg=" ";
-        min.forEach(function (d) { msg+=d+"</br>"; })
-        document.getElementById("statistic").innerHTML=msg;
+        //var min= processedShow(groups,$("#selection").val());
+       // var msg=" ";
+       // min.forEach(function (d) { msg+=d+"</br>"; })
+      //  document.getElementById("statistic").innerHTML=msg;
     });
 
 
     //鼠标在多边形上的点击事件(mouseup)
     //d和d3中的data有关，而this是按下鼠标时光标所在的dom元素
-    function focus(d,projection,current_this) {
+    function focus(d,current_this) {
         {
             //先将当前图层所有区域变暗
             var current_group=whichGroup(groups);
             current_group.style("opacity","0.7");
+            //获取当前点击时鼠标所在图斑的下一图层内的某一具体图斑
+            var hitPolygon=getHitPolygon(current_this);
 
             zoom.LOD_valid=false;
             //d为鼠标点击所属的多边形对象，有geometry 和properties属性
             //显示多边形的详细信息
-            var message="<b>detail:</b>"+"<br/>";
-            for(var item in d.properties)
+            // var message="<b>detail:</b>"+"<br/>";
+            // var msg=[];
+            // for(var item in d.properties)
+            // {
+            //     var character=e2c(item,current_group.level);
+            //     if(d.properties[item]&& character!=="")
+            //         msg.push(character+": "+d.properties[item]);
+            //         message +=character+": "+d.properties[item]+"<br/>";
+            // }
+            // document.getElementById("detail").innerHTML=message;
+
+            var msg=[];
+            for(let item in d.properties)
             {
-                if(d.properties[item])
-                    message +=item+": "+d.properties[item]+"<br/>";
+                let character=e2c(item,current_group.level);
+                if(d.properties[item]&& character!=="")
+                    msg.push(character+": "+d.properties[item]);
             }
-            document.getElementById("detail").innerHTML=message;
+            var detailsUpdate=d3.select("body").select("div").select("#show_detail").select("#detail")
+                .selectAll("p")
+                .data(msg);
+
+                detailsUpdate.enter()
+                .append("p")
+                .attr("class","detail")
+                .text(function (d) {return d;});
+                detailsUpdate.exit().remove();
+
+                detailsUpdate
+                    .attr("class","detail")
+                    .text(function (d) {return d;})
+
 
             if (active.node() === current_this){
              //   active.style("fill",d.fillColor);
@@ -157,17 +196,17 @@ window.onload=function () {
             //放大与对焦
             var bounds=undefined;
             if(parseInt(d.properties.depth)>4){
-                bounds=getRangeByCoordinates(d.geometry.coordinates[0],projection);
+                bounds=getRangeByCoordinates(d.geometry.coordinates[0],hitPolygon.projection);
             }
             else{
-                bounds=path.bounds(d);
+                var current_path = d3.geo.path().projection(hitPolygon.projection);//此处的projection要以hitPolygon存储的为准
+                bounds=current_path.bounds(d);  //path.bounds(d)
             }
-             var   dx = bounds[1][0] - bounds[0][0],
-                dy = bounds[1][1] - bounds[0][1],
+             var   dx = Math.abs(bounds[1][0] - bounds[0][0]),
+                dy = Math.abs(bounds[1][1] - bounds[0][1]),
                 x = (bounds[0][0] + bounds[1][0]) / 2,
                 y = (bounds[0][1] + bounds[1][1]) / 2,
-                scale = Math.max(1, Math.min(16, 0.9 / Math.max(dx / width, dy / height))),
-                //scale = Math.max(1, Math.min(8, 0.9 / Math.max(dx / (width*0.7), dy / (height*0.7) ))),//乘以0.7是防止放大得过大
+                scale = Math.max(1, Math.min(14, 0.9 / Math.max(dx / width, dy / height))),
                 translate = [width / 2 - scale * x, height / 2 - scale * y];
                 window.translate=translate;
 
@@ -175,8 +214,6 @@ window.onload=function () {
              detail_g.remove();
              detail_g=g.append("g");
 
-            var hitPolygon=getHitPolygon(current_this);
-            //var current_group=whichGroup(groups);
             //获取select标签选中的值
             var selection=d3.select("#selection")[0][0];
             var selectValue=selection.options[selection.selectedIndex].value;
@@ -184,31 +221,37 @@ window.onload=function () {
                 alert("Please choose a property to display.");
             }
 
-            displayDetail(selectValue,detail_g,hitPolygon);
+            displayDetail(selectValue,detail_g,hitPolygon);//
 
-            svg.transition()
-                .duration(750)  //750
-                .call(zoom.translate(translate).scale(scale).event);
+            //绘制外接矩形
+            // detail_g.append("rect")
+            //     .data(bounds)
+            //     .attr("x",bounds[0][0])
+            //     .attr("y",bounds[0][1]<bounds[1][1] ? bounds[0][1]:bounds[1][1])
+            //     .attr("width",dx)
+            //     .attr("height",dy)
+            //     .attr("fill","rgba(255,0,0,0.5)");
+
+             svg.transition()
+                 .duration(750)
+                 .call(zoom.translate(translate).scale(scale).event);
         }
     }
-
 
     //缩放函数
     function zoomed() {
         g.style("stroke-width",1.5 / d3.event.scale.toFixed(2) + "px" );  //
         g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-        document.getElementById("show_scale").innerHTML="<b>current scale:</b> "+zoom.scale().toFixed(2)+zoom.LOD_valid;
+        document.getElementById("show_scale").innerHTML="<b>current scale:</b> "+zoom.scale().toFixed(2); //+zoom.LOD_valid
 
         LOD(zoom.scale(),zoom.LOD_valid);
     }
-
 
 // If the drag behavior prevents the default click,
 // also stop propagation so we don’t click-to-zoom.
     function stopped() {
         if (d3.event.defaultPrevented) d3.event.stopPropagation();
     }
-
 
     //缩放按钮点击事件
     function zoomClick() {
@@ -311,13 +354,16 @@ window.onload=function () {
                 .on("mouseover",function () {
                     d3.select(this).style("opacity","0.7");
                     d3.select(this).style("stroke","#fff");
+                    d3.select(this).style("stroke-width","#fff");
                 })
                 .on("mouseout",function () {
                     d3.select(this).style("opacity","1");//"fill",d.fillColor
                     d3.select(this).style("stroke","#777");
                 })
                 .on("mouseup", function (d) {  //click
-                    focus(d,group.projection,this);//d和d3中的data有关，而this是按下鼠标时其所在的dom元素
+                    //注意：此处的group.projection并不会随group改变，而一直是最后一个图层的projection
+                    focus(d,/*group.projection,*/this);//d和d3中的data有关，而this是按下鼠标时其所在的dom元素
+
                 })
                 .append("title")  // 添加tooltip（即鼠标悬浮停留一会，就会显示相关信息）
                 .text(function(d){return d.properties.name});
