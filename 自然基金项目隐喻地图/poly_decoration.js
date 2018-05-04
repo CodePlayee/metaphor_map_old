@@ -31,7 +31,7 @@ function polygonFillColor(whichClass) {
             fill_color="#8968CD";
             break;
         case "subunit the_last_2_layers":
-            fill_color="#aabbcc";
+            fill_color="#CDB38B";
             break;
         default:
             fill_color="#aabbcc";
@@ -39,7 +39,6 @@ function polygonFillColor(whichClass) {
 
     return fill_color;
 }
-
 
 //在多边形内部标注文字 group代表g标签，features代表要素集，projection代表投影.
 function showPolygonLabel(group,features,projection)
@@ -78,4 +77,99 @@ function showPolygonLabel(group,features,projection)
         .style("text-anchor","middle")
         .style("font-size",font_size)
         .text(function (d) { return d.properties.name; });
+}
+
+//点击放大显示细节时，将中文拼音简称转换为汉字
+function e2c(pinYin,level) {
+    var character="";
+    if(level<5){
+        switch(pinYin)
+        {
+            case "depth":
+                character="所属层次";
+                break;
+            case "name":
+                character="名称";
+                break;
+            case "parentname":
+                character="父类名称";
+                break;
+            case "slsqxs":
+                    character="受理申请项数";
+                break;
+            case "slsqje":
+                    character="受理申请金额";
+                break;
+            case "pzzzxs":
+                character="批准资助项数";
+                break;
+            case "pzzzje":
+                    character="批准资助金额";
+                break;
+            case "zzjezqwbl":
+                    character="资助金额占全委比例";
+                break;
+            case "zzjezxbbl":
+                    character="资助金额占学部比例";
+                break;
+            case "dxpjzzje":
+                    character="单项平均资助金额";
+                break;
+            case "xszzl":
+                character="项数资助率";
+                break;
+            case "jezzl":
+                character="金额资助率";
+                break;
+            default:
+                character="";
+        }
+
+        return character;
+    }
+    else{
+        switch(pinYin)
+        {
+            case "depth":
+                character="所属层次";
+                break;
+            case "name":
+                character="项目编号";
+                break;
+            case "parentname":
+                character="父类名称";
+                break;
+            case "slsqxs":
+                character="";//受理申请项数
+                break;
+            case "slsqje":
+                character="";//受理申请金额
+                break;
+            case "pzzzxs":
+                character="批准资助项数";
+                break;
+            case "pzzzje":
+                character="";//批准资助金额
+                break;
+            case "zzjezqwbl"://资助金额占全委比例
+                character="项目全称";
+                break;
+            case "zzjezxbbl"://资助金额占学部比例
+                character="项目负责人";
+                break;
+            case "dxpjzzje"://单项平均资助金额
+                character="所属机构";
+                break;
+            case "xszzl"://项数资助率
+                character="资助金额";
+                break;
+            case "jezzl"://金额资助率
+                character="有效时间";
+                break;
+            default:
+                character="";
+        }
+
+        return character;
+    }
 }
