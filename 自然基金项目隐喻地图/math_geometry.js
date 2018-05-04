@@ -23,17 +23,23 @@ function getRangeByFeatures(features) {
     return range;
 }
 
-//获取坐标最值,参数coordinates为geometry里的属性，为坐标串的数组
+//获取坐标最值,参数coordinates为geometry里的属性，为坐标串的数组  ,有问题
 function getRangeByCoordinates(coordinates/*,projection*/) {
     var pts=[];//
-    for(var j=0;j<coordinates.length;j++)
-    {
-        for(var k=0;k<coordinates[j].length;k++)
-        {
-            var pt=[coordinates[j][k][0] ,coordinates[j][k][1]];
-            pts.push(pt);
-        }
+    if(coordinates.length==1){
+        pts=coordinates[0];
     }
+    else{
+        pts=coordinates;
+    }
+    // for(var j=0;j<coordinates.length;j++)
+    // {
+    //     for(var k=0;k<coordinates[j].length;k++)
+    //     {
+    //         var pt=[coordinates[j][k][0] ,coordinates[j][k][1]];
+    //         pts.push(pt);
+    //     }
+    // }
 
     var range=[];
 
@@ -208,15 +214,8 @@ function displayDetail(selectedProperty,g,hit_polygon) {
             var maxValue=d3.max(property_values,function (d) { return parseFloat(d[selectedProperty]); }),//此处不能用d.selectedProperty，因为此处使用变量访问属性。
                 minValue=d3.min(property_values,function (d) { return parseFloat(d[selectedProperty]); });
 
-
-            //重新定义投影,进一步决定path
-            // var valid_projection = d3.geo.mercator()//定义投影
-            //     .scale(140000)//设置缩放量
-            //    .translate([width / 2, height / 2]);　//设置平移量
-            // valid_projection.center(hit_polygon.project_center);
-
             var path = d3.geo.path()  //create a path generator
-                .projection(hit_polygon.projection);　//应用上面生成的投影，每一个坐标都会先调用此投影函数，然后才产生路径值
+                .projection(hit_polygon.projection);　
 
             g.selectAll("path") //
                 .data(data)
@@ -296,9 +295,11 @@ function getHitPolygon(current_this) {
 // 按项目的申请机构进行聚类(参数含义：projection代表投影，programs代表项目，group代表图层)
 function clusterByOrganization(projection,programs,group) {
         var clusters=[];//记录聚类后的项目(二维数组)
-        clusters.itemCount=0;
-        clusters.addedeCount=0;//记录每次循环增加的数目,即上一步clustered.length
+        clusters.itemCount=0;//已聚类的项目个数，聚类完成时等于项目总数
+        clusters.addedCount=0;//记录每次循环增加的数目,即上一步clustered.length
         var eachCluster=[];// 每次循环属于同一组的项目数目
+
+        var clusteredCenters=[];
 
         var centers=[];//各个正六边形中心
         var tempPrograms=[];
@@ -307,45 +308,57 @@ function clusterByOrganization(projection,programs,group) {
             tempPrograms.push(programs[j]);
         }
 
-
-
         while (tempPrograms.length>0){
-            for(var m=0;m<clusters.addedeCount-1;m++){
+            for(var m=0; m<clusters.addedCount-1; m++){
                 tempPrograms.shift();
             }
 
-            var clustered=[];//记录每次循环聚类的个数(>=1)
+            var clustered=[];//记录每次循环聚类的单元
             var item=tempPrograms.shift();
+            clustered.push(item);
+            clusters.itemCount++;
 
             for(var k=0,len=tempPrograms.length;k<len;k++){
                 if(tempPrograms[k].properties.dxpjzzje===item.properties.dxpjzzje){
-                    var temp=tempPrograms[k];
-                    tempPrograms[k]=tempPrograms[clustered.length];
-                    tempPrograms[clustered.length]=temp;
+                    //交换两个hex在依gosper曲线顺序绘制中的位置
+                    var temp=tempPrograms[k];//原先的目标hex
+                    tempPrograms[k]=tempPrograms[clustered.length-1];
+                    tempPrograms[clustered.length-1]=temp;
+                    //存储目标hex之前，需要将其geometry与center属性替换为与其交换位置的hex的对应属性
+                    var tempGeo=tempPrograms[k].geometry;
+                    var tempCenter=tempPrograms[k].center;
+                    tempPrograms[k].geometry=tempPrograms[clustered.length-1].geometry;
+                    tempPrograms[clustered.length-1].geometry=tempGeo;
+                    tempPrograms[k].center=tempPrograms[clustered.length-1].center;
+                    tempPrograms[clustered.length-1].center=tempCenter;
 
-                    clustered.push(temp);
+                    clusteredCenters.push(projection([temp.center.x,temp.center.y]))
+
+                    clustered.push(tempPrograms[clustered.length-1]);//temp
                     clusters.itemCount++;
                 }
             }
-            clustered.push(item);
-            clusters.itemCount++;
-            clusters.addedeCount=clustered.length;
+            // clustered.push(item);
+            // clusters.itemCount++;
+            clusters.addedCount=clustered.length;
             clusters.push(clustered);
 
             eachCluster.push(clustered.length);
         }
 
-        var clusterData=[];//项目数大于1的集群所在数组
-        var singleData=[]; //单个的项目所在的数组
-        for(var a=0;a<clusters.length;a++){
-            for(var b=0;b<clusters[a].length;b++){
-                if(clusters[a].length>1){
+        //  var clusterData=[];//项目数大于1的集群所在数组
+        //var singleData=[]; //单个的项目所在的数组
+        var wholeData=[];
+
+        for(let a=0;a<clusters.length;a++){
+            for(let b=0;b<clusters[a].length;b++){
+                    var hexCount=clusters[a].length;//某一机构拿到的项目数量
                     var min=d3.min(eachCluster,function (d) {return d;});
                     var max=d3.max(eachCluster,function (d) {return d;});
                     var color=setColor(min,max,eachCluster[a]);
-
-                    clusterData.push( {
-                        "fillColor":color,
+                    wholeData.push( {
+                        "clusters":hexCount>1?true:false,
+                        "fillColor":hexCount>1?color:"#eee",
                         "geometry": {
                             "type": "Polygon",
                             "coordinates": [clusters[a][b].geometry]
@@ -353,34 +366,56 @@ function clusterByOrganization(projection,programs,group) {
                         "properties":clusters[a][b].properties,
                         "type": "Feature"
                     });
-                }
-                else{
-                    singleData.push( {
-                        "fillColor":"#eee",
-                        "geometry": {
-                            "type": "Polygon",
-                            "coordinates": [clusters[a][b].geometry]
-                        },
-                        "properties":clusters[a][b].properties,
-                        "type": "Feature"
-                    });
-                }
+                // if(clusters[a].length>1){
+                //     var min=d3.min(eachCluster,function (d) {return d;});
+                //     var max=d3.max(eachCluster,function (d) {return d;});
+                //     var color=setColor(min,max,eachCluster[a]);
+                //
+                //     clusterData.push( {
+                //         "fillColor":color,
+                //         "geometry": {
+                //             "type": "Polygon",
+                //             "coordinates": [clusters[a][b].geometry]
+                //         },
+                //         "properties":clusters[a][b].properties,
+                //         "type": "Feature"
+                //     });
+                // }
+                // else{
+                //     singleData.push( {
+                //         "fillColor":"#eee",
+                //         "geometry": {
+                //             "type": "Polygon",
+                //             "coordinates": [clusters[a][b].geometry]
+                //         },
+                //         "properties":clusters[a][b].properties,
+                //         "type": "Feature"
+                //     });
+                // }
             }
         }
 
-        var allData=clusterData.concat(singleData);
+       // var allData=clusterData.concat(singleData);
 
         var hexes=group.selectAll("path.subunit");
-        var update=hexes.data(allData);//clusterData
+
+        var update=hexes.data(wholeData);  //allData
+
         var exit=update.exit();
 
         update
-            .style("stroke","#fff")
+            // .style("stroke",function (d) {  //若css文件中设置了则此处设置无效
+            //     if(d.clusters===true)
+            //         return d.fillColor;
+            //     else
+            //         return  "#777";
+            // })
             .style("fill",function (d) {
                 return d.fillColor;
             })
             .select("title")
             .text(function(d){return d.properties.dxpjzzje});
+
 
         exit.remove();
 
@@ -390,8 +425,8 @@ function clusterByOrganization(projection,programs,group) {
         //     .y(function(d) { return d[1]; })
         //     .interpolate("linear");
         //
-        // var lineGraph = g5.append("path")
-        //     .attr("d", lineFunction(centers))
+        // var lineGraph = group.append("path")
+        //     .attr("d", lineFunction(clusteredCenters)) //centers
         //     .attr("stroke", "blue")
         //     .attr("stroke-width", 0.2)
         //     .attr("fill", "none");
