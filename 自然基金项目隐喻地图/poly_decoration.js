@@ -7,28 +7,28 @@ function polygonFillColor(whichClass) {
             fill_color="gold";
             break;
         case "subunit 信息科学部":
-            fill_color="#FFB90F";
+            fill_color="#BEB430"; //"#FFB90F"
             break;
         case "subunit 工程与材料科学部":
-            fill_color="#EEEE00";
+            fill_color="#446377";  //  #EEEE00
             break;
         case "subunit 数理科学部":
-            fill_color="#EEAEEE";
+            fill_color="#2C769B";  // #EEAEEE
             break;
         case "subunit 地球科学部":
-            fill_color="#CDB38B";
+            fill_color="#CEC664";  //   #CDB38B
             break;
         case "subunit 化学科学部":
-            fill_color="#FF8C69";
+            fill_color="#D49A6C";  //  #FF8C69
             break;
         case "subunit 生命科学部":
-            fill_color="#7CCD7C";
+            fill_color="#809CC4";   //   #7CCD7C
             break;
         case "subunit 医学科学部":
-            fill_color="#87CEFF";
+            fill_color="#69973D";  //  #87CEFF
             break;
         case "subunit 管理科学部":
-            fill_color="#8968CD";
+            fill_color="#B28373";  //  #8968CD
             break;
         case "subunit the_last_2_layers":
             fill_color="#CDB38B";
@@ -41,7 +41,7 @@ function polygonFillColor(whichClass) {
 }
 
 //在多边形内部标注文字 group代表g标签，features代表要素集，projection代表投影.
-function showPolygonLabel(group,features,projection)
+function showPolygonLabel(group,features/*,projection*/)
 {
     var font_size=8;
     switch (group.level){
@@ -54,8 +54,11 @@ function showPolygonLabel(group,features,projection)
         case 3:
             font_size=5;
             break;
+        case 4:
+            font_size=4;
+            break;
         default:
-            font_size=0;
+            font_size=1;
             break;
     }
 
@@ -64,19 +67,23 @@ function showPolygonLabel(group,features,projection)
         .enter()
         .append("text")
         .attr("x",function (d) {
-            var gravityCenter=getGravityCenter(d.geometry.coordinates[0]);//多边形重心，coordinates里的元素是数组
-            var projected_zx=projection([gravityCenter.x,gravityCenter.y]);//投影后的重心，返回的是数组[ , ]
-            return  projected_zx[0];
+            // var gravityCenter=getGravityCenter(d.geometry.coordinates[0]);//多边形重心，coordinates里的元素是数组
+            // var projected_zx=projection([gravityCenter.x,gravityCenter.y]);//投影后的重心，返回的是数组[ , ]
+            // return  projected_zx[0];
+            return d.projected_zx[0]
         })
         .attr("y",function (d) {
-            var gravityCenter=getGravityCenter(d.geometry.coordinates[0]);
-            var projected_zx=projection([gravityCenter.x,gravityCenter.y]);
-            return  projected_zx[1];
+            return d.projected_zx[1]
         })
         .attr("class","level"+group.level+"label")
         .style("text-anchor","middle")
         .style("font-size",font_size)
-        .text(function (d) { return d.properties.name; });
+        .text(function (d) {
+            if(d.properties)
+                return d.properties.name;
+            else if(d.info)
+                return d.info.properties.name;
+            });
 }
 
 //点击放大显示细节时，将中文拼音简称转换为汉字
