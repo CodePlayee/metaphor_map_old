@@ -3,45 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <title>自然基金项目隐喻地图</title>
-
 </head>
 
 <body class="full" style="display: -moz-box; display: -webkit-box " >
 <div class="box-vertical full">
-    <div id="main_title">自然科学基金项目隐喻地图</div>
+    <div id="header">自然科学基金项目隐喻地图</div>
     <!--地图显示区域-->
     <div id="map_div">
-           <svg id="svg_area"></svg>
+           <svg id="map_svg"></svg>
+
+           <button id="reset" class="upper_controls">reset</button>
+           <button id="browse" class="upper_controls">browse</button>
+           <select class="upper_controls" name="option" id="selection">
+             <option value="slsqxs">受理申请项数</option>
+             <option value="slsqje">受理申请金额</option>
+             <option value="pzzzxs">批准资助项数</option>
+             <option value="pzzzje">批准资助金额</option>
+            </select>
     </div>
 
-    <div id="control">
-        <br/>
-    <button id="zoom_in" class="zoom_bt">+</button>
 
-    <button id="zoom_out" class="zoom_bt">-</button>
-
-    <button id="reset">reset</button>
-
-     <!--<button id="reorganize">statistic</button>-->
-
-     <br/>
-        <select name="option" id="selection">
-            <option value="slsqxs">受理申请项数</option>
-            <option value="slsqje">受理申请金额</option>
-            <option value="pzzzxs">批准资助项数</option>
-            <option value="pzzzje">批准资助金额</option>
-        </select>
-
-    </div>
-
-    <div id="show_detail">
+    <div id="show_detail" class="upper_controls">
         <p id="show_scale"><b>current scale:</b> 1</p>
         <br/>
-
         <div id="detail"></div>
-        <!--<p id="detail"><b>detail:</b>2016年度国家自然基金资助项目统计详情 </p>-->
         <br/>
-        <!--<p id="statistic"><b>统计信息：</b> </p>-->
     </div>
 
 </div>
@@ -50,10 +36,12 @@
 <script src="lib/D3_v3.js"></script>
 <script src="lib/queue_v1.js"></script>
 <script src="lib/jquery-2.1.4.js"></script>
-<script src="https://cdn.bootcss.com/topojson/1.6.20/topojson.js"></script>
+<script src="lib/topojson_1.6.20.js"></script>
+<script src="lib/topojson-server.js"></script>
+<!--<script src="https://cdn.bootcss.com/topojson/1.6.20/topojson.js"></script>-->
 <script src="math_geometry.js" ></script>
 <script src="poly_decoration.js"></script>
-<script src="makeMap.js" ></script>
+<script src="main.js" ></script>
 
 </body>
 </html>
