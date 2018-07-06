@@ -470,7 +470,6 @@ function clusterByOrganization(projection, programs, group) {
 
     }
 
-
     //线生成器
     // var lineFunction = d3.svg.line()
     //     .x(function(d) { return d[0]; })
