@@ -1,37 +1,37 @@
 //根据多边形的类名，确定对应的填充颜色。
-function polygonFillColor(whichClass) {
+function class2color(whichClass) {
     var fill_color;
     switch(whichClass)
     {
         case "subunit firstLevel":  //注意，此处是字符串判断，不同于CSS的多类判断
-            fill_color="gold";
+            fill_color="#FDEBA2";
             break;
         case "subunit 信息科学部":
-            fill_color="#BEB430"; //"#FFB90F"
+            fill_color="#FDEBA1"; //"#FFB90F"
             break;
         case "subunit 工程与材料科学部":
-            fill_color="#446377";  //  #EEEE00
+            fill_color="#F49266";  //  #EEEE00
             break;
         case "subunit 数理科学部":
-            fill_color="#2C769B";  // #EEAEEE
+            fill_color="#F19E9E";  // #EEAEEE
             break;
         case "subunit 地球科学部":
-            fill_color="#CEC664";  //   #CDB38B
+            fill_color="#F5AFF0";  //   #CDB38B
             break;
         case "subunit 化学科学部":
-            fill_color="#D49A6C";  //  #FF8C69
+            fill_color="#57BEE6";  //  #FF8C69
             break;
         case "subunit 生命科学部":
-            fill_color="#809CC4";   //   #7CCD7C
+            fill_color="#C9EB85";   //   #7CCD7C
             break;
         case "subunit 医学科学部":
-            fill_color="#69973D";  //  #87CEFF
+            fill_color="#93FAC6";  //  #87CEFF
             break;
         case "subunit 管理科学部":
-            fill_color="#B28373";  //  #8968CD
+            fill_color="#E0C8A4";  //  #8968CD
             break;
         case "subunit the_last_2_layers":
-            fill_color="#CDB38B";
+            fill_color="#B080C6";
             break;
         default:
             fill_color="#aabbcc";
@@ -67,9 +67,6 @@ function showPolygonLabel(group,features/*,projection*/)
         .enter()
         .append("text")
         .attr("x",function (d) {
-            // var gravityCenter=getGravityCenter(d.geometry.coordinates[0]);//多边形重心，coordinates里的元素是数组
-            // var projected_zx=projection([gravityCenter.x,gravityCenter.y]);//投影后的重心，返回的是数组[ , ]
-            // return  projected_zx[0];
             return d.projected_zx[0]
         })
         .attr("y",function (d) {
@@ -77,7 +74,22 @@ function showPolygonLabel(group,features/*,projection*/)
         })
         .attr("class","level"+group.level+"label")
         .style("text-anchor","middle")
-        .style("font-size",font_size)
+        .style("font-size",function (d) {
+            if(group.level<=3)
+                return font_size;
+            else{
+                var depth;
+                if(d.properties)
+                    depth=d.properties.depth;
+                if(d.info)
+                    depth=d.info.properties.depth;
+                depth=parseInt(depth);
+                if(depth<4)
+                    return 3;
+                else
+                    return 1;
+            }
+        })
         .text(function (d) {
             if(d.properties)
                 return d.properties.name;
@@ -180,3 +192,4 @@ function e2c(pinYin,level) {
         return character;
     }
 }
+
