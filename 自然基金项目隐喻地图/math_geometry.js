@@ -101,6 +101,7 @@ function reorganize(d, projection) {
         case 1: //第一图层
             whole.push({
                 "fillColor": d.fillColor,
+                "class":d.class,
                 "projection": projection,
                 "properties": d.properties,
                 "innerPolygons": [],   //记录其内部下一级各个多边形的坐标
@@ -111,6 +112,7 @@ function reorganize(d, projection) {
         case 2://学部  (地球科学部)
             var department = {
                 "fillColor": d.fillColor,
+                "class":d.class,
                 "projection": projection,
                 "properties": d.properties,
                 "innerPolygons": [],
@@ -124,6 +126,7 @@ function reorganize(d, projection) {
         case 3://学科  （地理学）
             var subject = ({
                 "fillColor": d.fillColor,
+                "class":d.class,
                 "projection": projection,
                 "properties": d.properties,
                 "innerPolygons": [],
@@ -137,6 +140,7 @@ function reorganize(d, projection) {
         case 4://子学科  （地理信息系统）
             var sub_discipline = ({
                 "fillColor": d.fillColor ? d.fillColor : "#ccc",
+                "class":d.class,
                 "projection": projection,
                 "properties": d.properties,
                 "innerPolygons": [],
@@ -150,6 +154,7 @@ function reorganize(d, projection) {
         case 5://项目  （基于深度学习的城市情感空间构建研究）
             var program = ({
                 "fillColor": d.fillColor ? d.fillColor : "#ccc",
+                "class":d.class,
                 "projection": projection,
                 "properties": d.properties,
                 "geometry": d.geometry.coordinates,    // 此处geometry应为coordinates  Array(7)
@@ -187,7 +192,7 @@ function back2GeoJSON(coordinates, subComponents, flag, zxs, group) {
     var data = [],//data中的一个元素对应一个图斑重组织后的数据
         property_values = [];
 
-    if (coordinates) { // coordinates对应innerPolygons
+    if (subComponents) { // coordinates对应innerPolygons
         for (var i = 0; i < subComponents.length; i++) {
             if (flag === true) {
                 property_values.push(subComponents[i].properties);
@@ -215,39 +220,78 @@ function back2GeoJSON(coordinates, subComponents, flag, zxs, group) {
 }
 
 
-//放大某一多边形后，显示其内部细节,layer为[whole,departments,subjects,sub_disciplines,programs]之一
-function displayDetail(selectedProperty, g, hit_polygon) {
-    if (!hit_polygon.subComponents) return; //到达最后一层（个人项目层）
-    var coordinates = hit_polygon.innerPolygons;  // ? hit_polygon.innerPolygons : hit_polygon.geometry;
-    var subComponents = hit_polygon.subComponents;  //?hit_polygon.subComponents:hit_polygon.properties;
+//放大某一多边形后，显示其内部细节
+function displayDetail(group,selectedProperty, detail_g, hitPolygon) {
+    if (!hitPolygon.subComponents) return; //到达最后一层（个人项目层）
+    var subComponents = hitPolygon.subComponents;
+    var coordinates=hitPolygon.innerPolygons;
+    var groupIndex=group.level;
+    var dgs_data=[];
 
-    var result = back2GeoJSON(coordinates, subComponents, true),
-        data = result.data,
-        property_values = result.property_values;
+    var drawSubPaths = function (result,g,projection) {
+        var data = result.data;
+        dgs_data[g[0][0].id]=data;
+        var property_values = result.property_values;
 
-    var maxValue = d3.max(property_values, function (d) {
-            return parseFloat(d[selectedProperty]);
-        }),
-        minValue = d3.min(property_values, function (d) {
-            return parseFloat(d[selectedProperty]);
-        });
+        var maxValue = d3.max(property_values, function (d) {
+                return parseFloat(d[selectedProperty]);
+            }),
+            minValue = d3.min(property_values, function (d) {
+                return parseFloat(d[selectedProperty]);
+            });
 
-    var path = d3.geo.path()  //create a path generator
-        .projection(hit_polygon.projection);
+        var path = d3.geo.path()
+            .projection(projection);
 
-    g.selectAll("path") //
-        .data(data)
-        .enter()
-        .append("path")
-        .attr("d", path)
-        .style("stroke", "#fff")
-        .style("fill", function (d) {
-            return setColor(minValue, maxValue, selectedProperty, d);
-        })
-        .append("title")
-        .text(function (d) {
-            return d.info.properties.name
-        });
+        g.selectAll("path")
+            .data(data)
+            .enter()
+            .append("path")
+            .attr("d", path)
+            .style("stroke", "#fff")
+            .style("fill", function (d) {
+                return setColor(minValue, maxValue, selectedProperty, d);
+            })
+            .append("title")
+            .text(function (d) {
+                return d.info.properties.name
+            });
+    }
+
+    var makeSub = function (g,coordinates,subComponents,proj) {
+        if (subComponents.length > 0) {
+            var result=back2GeoJSON(coordinates,subComponents,true);
+            drawSubPaths(result,g,proj);
+        }
+    }
+
+    var proj=groups[0].projection;//前3个图层投影函数一致
+    if(group.level>=4)
+        proj=groups[3].projection;
+
+    while (groupIndex<groups.length){
+        var g = detail_g.append("g")
+            .attr("id",function () {return "dg"+groupIndex;})
+            .style("display","none");
+        groupIndex++;
+        if(groupIndex>4)
+            proj=groups[3].projection;
+
+        makeSub(g,coordinates,subComponents,proj);
+        var newSubComponents=[],newCoordinates=[];
+        for(var i=0,len=subComponents.length;i<len;i++){
+            if(subComponents[i].subComponents){
+                for(var j=0,l=subComponents[i].subComponents.length;j<l;j++){
+                    newSubComponents.push(subComponents[i].subComponents[j]);
+                    newCoordinates.push(subComponents[i].innerPolygons[j]);
+                }
+            }
+        }
+        subComponents=newSubComponents;
+        coordinates=newCoordinates;
+    }
+
+    return dgs_data;
 }
 
 
@@ -428,35 +472,35 @@ function clusterByOrganization(projection, programs, group) {
         .projection(group.projection);
 
     for (var i = 0; i < collections.length; i++) {
-        var featureCollection={  // GeoJSON格式
-            'type':'FeatureCollection',
-            'features':[]
+        var featureCollection = {  // GeoJSON格式
+            'type': 'FeatureCollection',
+            'features': []
         }
-        for(var j=0;j<collections[i].length;j++){
-            var feature={
-                'type':'Feature',
-                'geometry':{
-                    'type':'Polygon',
-                    'coordinates':collections[i][j].geometry
+        for (var j = 0; j < collections[i].length; j++) {
+            var feature = {
+                'type': 'Feature',
+                'geometry': {
+                    'type': 'Polygon',
+                    'coordinates': collections[i][j].geometry
                 },
                 "properties": collections[i][j].properties,
-                "fillColor":setColor(min, max, collections[i].length)
+                "fillColor": setColor(min, max, collections[i].length)
             }
             featureCollection.features.push(feature);
         }
 
-        var topology=topojson.topology({  //转换为TopoJSON
-            collection:featureCollection
+        var topology = topojson.topology({  //转换为TopoJSON
+            collection: featureCollection
         });
 
         var geoCluster = topojson.feature(topology, topology.objects.collection);
-        var g= group.append('g');
-            g.selectAll("path")
+        var g = group.append('g');
+        g.selectAll("path")
             .data(geoCluster.features)
             .enter()
             .append("path")
             .attr("d", path)
-            .style('fill','none');
+            .style('fill', 'none');
 
         //cluster外部边界
         g.append("path")
@@ -464,7 +508,7 @@ function clusterByOrganization(projection, programs, group) {
                 return a === b;
             }))
             .attr("class", function () {
-                return  "clusterBorder";
+                return "clusterBorder";
             })
             .attr("d", path);
 
@@ -539,7 +583,7 @@ function setColor(min, max, selectedProperty, d) {
 }
 
 //在现有图层group上追加path元素
-function appendPath(coordinates, subComponents, zxs, group) {
+function appendPath(coordinates, subComponents, zxs, group,focus) {
     var data = back2GeoJSON(coordinates, subComponents, false, zxs, group);
     var path = d3.geo.path().projection(group.projection);
     for (var k = 0, len = data.length; k < len; k++) {
@@ -549,7 +593,21 @@ function appendPath(coordinates, subComponents, zxs, group) {
             .style("fill", function (d) {
                 return d.info.fillColor;
             })
-            .style("stroke", "#ddd")
+            .style("stroke", "#777")
+            .on("dblclick", function (d) {
+                var e = window.event;
+                stopDefault(e);
+                stopBubble(e);
+                focus(d,this,false);
+            })
+            .on("mouseover", function () {
+                d3.select(this).style("stroke", "#fff");
+                d3.select(this).style("opacity", "0.7");//0.7
+            })
+            .on("mouseout", function () {
+                d3.select(this).style("stroke", "#777");
+                d3.select(this).style("opacity", "1");//"fill",d.fillColor
+            })
             .append("title")
             .text(function (d) {
                 return d.info.properties.name
