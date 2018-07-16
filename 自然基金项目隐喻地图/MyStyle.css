@@ -33,7 +33,7 @@ div#header{
     -moz-box-flex: 1;
     -webkit-box-flex:1;
     box-flex: 1;
-    background-color:#FFFBF2;
+    background-color:#6B6B6B;
 }
 
 .upper_controls{
@@ -88,49 +88,11 @@ select{
 }
 option{
     text-align: center;
-    background-color: #0076a3 ;
+    background-color: #0076a3;
 }
 
 /*清除ie的默认选择框样式清除，隐藏下拉箭头*/
 select::-ms-expand { display: none; }
-
-button {
-    margin: 10px 30px 10px 30px;
-    width: 75px;
-    height: 25px;
-    font-size: 20px;
-    color: #d9eef7;
-    border: solid 1px #0076a3;
-    background: #0095cd;
-    background: -webkit-gradient(linear, left top, left bottom, from(#00adee), to(#0078a5));
-    background: -moz-linear-gradient(top,  #00adee,  #0078a5);
-    filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#00adee', endColorstr='#0078a5');
-    text-shadow: 0 1px 1px rgba(0,0,0,.3);
-    -webkit-border-radius: .5em;
-    -moz-border-radius: .5em;
-    border-radius: .5em;
-    -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.2);
-    -moz-box-shadow: 0 1px 2px rgba(0,0,0,.2);
-    box-shadow: 0 1px 2px rgba(0,0,0,.2);
-}
-button:hover {
-    width: 75px;
-    height: 25px;
-    font-size: 20px;
-    background: #007ead;
-    background: -webkit-gradient(linear, left top, left bottom, from(#0095cc), to(#00678e));
-    background: -moz-linear-gradient(top,  #0095cc,  #00678e);
-    filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#0095cc', endColorstr='#00678e');
-}
-button:active {
-    width: 60px;
-    height: 25px;
-    font-size: 20px;
-    color: #80bed6;
-    background: -webkit-gradient(linear, left top, left bottom, from(#0078a5), to(#00adee));
-    background: -moz-linear-gradient(top,  #0078a5,  #00adee);
-    filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#0078a5', endColorstr='#00adee');
-}
 
 /*设置文字*/
 text {
@@ -148,7 +110,7 @@ text {
 /*各个多边形内部边界,不包括整体的外部轮廓*/
 .polygon_borders {
     fill: none;
-    stroke: #eee;
+    stroke: #777;
     /*stroke-width: 1px;*/    /*不要在CSS中设置线宽，否则会以此数值缩放。（在zoomed和interpolateZoom函数中 1.5 / d3.event.scale会控制线宽恒为1.5px） */
     /*stroke-dasharray: 2,2; !*线型*!*/
     stroke-linejoin: round;
@@ -206,9 +168,7 @@ text {
     -webkit-box-orient: vertical;
 }
 
-.subunit.active{
-    /*stroke-width: 1px;*/
-}
+
 
 
 
